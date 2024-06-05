@@ -68,9 +68,6 @@ void print_help(char *path)
 {
 	fprintf(stderr, "Usage :\n\t%s [arguments] [input-file] [output-file]\n\n", path);
 	fprintf(stderr, "Arguments :\n");
-	fprintf(stderr, " -0     : store only\n");
-	fprintf(stderr, " -1     : compress faster (default)\n");
-	fprintf(stderr, " -9     : compress better\n");
 	fprintf(stderr, " -d     : force decompression\n");
 	fprintf(stderr, " -z     : force compression\n");
 	fprintf(stderr, " -f     : overwrite existing output file\n");
@@ -78,70 +75,46 @@ void print_help(char *path)
 	fprintf(stderr, " -h     : print this message\n");
 }
 
-static size_t min_layers = 3;
-static size_t max_layers = 1;
-
 struct layer {
 	void *data; /* input data */
 	size_t size; /* input size */
-} layer[256];
+} layer[2];
 
 void free_layers()
 {
-	for (size_t j = 0; j < 256; ++j) {
+	for (size_t j = 0; j < 2; ++j) {
 		free(layer[j].data);
 	}
 }
 
-size_t multi_compress(size_t j)
+void multi_compress()
 {
-	size_t J = j + 1;
+	layer[1].data = malloc(8 * layer[0].size);
 
-	if (J >= 256 || J > max_layers) {
-		return j;
-	}
-
-	layer[J].data = malloc(8 * layer[j].size);
-
-	if (layer[J].data == NULL) {
+	if (layer[1].data == NULL) {
 		abort();
 	}
 
 	init();
 
-	void *end = compress(layer[j].data, layer[j].size, layer[J].data);
+	void *end = compress(layer[0].data, layer[0].size, layer[1].data);
 
-	layer[J].size = (char *)end - (char *)layer[J].data;
-
-	if (layer[J].size < layer[j].size || J < min_layers) {
-		/* try next layer */
-		J = multi_compress(J);
-	}
-
-	return layer[j].size < layer[J].size ? j : J;
+	layer[1].size = (char *)end - (char *)layer[1].data;
 }
 
-void multi_decompress(size_t j)
+void multi_decompress()
 {
-	if (j == 0) {
-		return;
-	}
+	layer[0].data = malloc(8 * layer[1].size + 4096);
 
-	assert(j > 0 && j < 256);
-
-	layer[j - 1].data = malloc(8 * layer[j].size + 4096);
-
-	if (layer[j - 1].data == NULL) {
+	if (layer[0].data == NULL) {
 		abort();
 	}
 
 	init();
 
-	void *end = decompress(layer[j].data, layer[j].size, layer[j - 1].data);
+	void *end = decompress(layer[1].data, layer[1].size, layer[0].data);
 
-	layer[j - 1].size = (char *)end - (char *)layer[j - 1].data;
-
-	multi_decompress(j - 1);
+	layer[0].size = (char *)end - (char *)layer[0].data;
 }
 
 void load_layer(size_t j, FILE *stream)
@@ -159,36 +132,11 @@ void load_layer(size_t j, FILE *stream)
 	fprintf(stderr, "Input size: %lu bytes\n", (unsigned long)layer[j].size);
 }
 
-size_t load_from_container(FILE *stream)
-{
-	int c = fgetc(stream);
-
-	if (c == EOF) {
-		fprintf(stderr, "Unexpected end of file\n");
-		abort();
-	}
-
-	size_t J = c;
-
-	load_layer(J, stream);
-
-	return J;
-}
-
 void save_layer(size_t j, FILE *stream)
 {
 	fprintf(stderr, "Output size: %lu bytes\n", (unsigned long)layer[j].size);
 
 	fsave(layer[j].data, layer[j].size, stream);
-}
-
-void save_to_container(size_t J, FILE *stream)
-{
-	if (fputc(J, stream) == EOF) {
-		abort();
-	}
-
-	save_layer(J, stream);
 }
 
 int main(int argc, char *argv[])
@@ -197,7 +145,7 @@ int main(int argc, char *argv[])
 	FILE *istream = NULL, *ostream = NULL;
 	int force = 0;
 
-	parse: switch (getopt(argc, argv, "zdf019kh")) {
+	parse: switch (getopt(argc, argv, "zdfkh")) {
 		case 'z':
 			mode = COMPRESS;
 			goto parse;
@@ -206,15 +154,6 @@ int main(int argc, char *argv[])
 			goto parse;
 		case 'f':
 			force = 1;
-			goto parse;
-		case '0':
-			max_layers = 0;
-			goto parse;
-		case '1':
-			max_layers = 1;
-			goto parse;
-		case '9':
-			max_layers = 255;
 			goto parse;
 		case 'k':
 			goto parse;
@@ -270,17 +209,13 @@ int main(int argc, char *argv[])
 	if (mode == COMPRESS) {
 		load_layer(0, istream);
 
-		size_t J = multi_compress(0);
+		multi_compress();
 
-		fprintf(stderr, "Number of layers: %lu\n", J);
-
-		save_to_container(J, ostream);
+		save_layer(1, ostream);
 	} else {
-		size_t J = load_from_container(istream);
+		load_layer(1, istream);
 
-		fprintf(stderr, "Number of layers: %lu\n", J);
-
-		multi_decompress(J);
+		multi_decompress();
 
 		save_layer(0, ostream);
 	}
