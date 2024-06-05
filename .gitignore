@@ -4,5 +4,5 @@ gmon.out
 cachegrind.out.*
 callgrind.out.*
 
-x
-unx
+encode
+decode

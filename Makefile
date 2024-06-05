@@ -4,7 +4,7 @@ LDLIBS+=
 
 BINDIR?=$(DESTDIR)$(PREFIX)/usr/bin
 
-BIN=x unx
+BIN=encode decode
 
 ifeq ($(BUILD),debug)
 	CFLAGS+=-Og -g
@@ -32,11 +32,11 @@ endif
 .PHONY: all
 all: $(BIN)
 
-x: x.o libx.o
+encode: encode.o libx.o
 
 libx.o: libx.c libx.h
 
-unx: x
+decode: encode
 	ln -s $< $@
 
 .PHONY: clean
@@ -50,16 +50,16 @@ distclean: clean
 .PHONY: build-pgo
 build-pgo:
 	$(MAKE) distclean all BUILD=profile-generate
-	./x -f -1 libx.c
-	./unx -f libx.c.x libx.c.x.out
+	./encode -f -1 libx.c
+	./decode -f libx.c.x libx.c.x.out
 	diff libx.c libx.c.x.out
 	$(MAKE) clean all BUILD=profile-use
 	-$(RM) -- libx.c.x libx.c.x.out
 
 .PHONY: check
 check: all
-	./x -f libx.c
-	./unx -f libx.c.x libx.c.x.out
+	./encode -f libx.c
+	./decode -f libx.c.x libx.c.x.out
 	diff libx.c libx.c.x.out
 	-$(RM) -- libx.c.x libx.c.x.out
 
@@ -67,4 +67,4 @@ check: all
 install: all
 	install -d $(BINDIR)
 	install -m 755 x $(BINDIR)
-	cp -d unx $(BINDIR)
+	cp -d decode $(BINDIR)

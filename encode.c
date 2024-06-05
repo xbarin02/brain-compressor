@@ -141,7 +141,7 @@ void save_layer(size_t j, FILE *stream)
 
 int main(int argc, char *argv[])
 {
-	int mode = (argc > 0 && strcmp(basename(argv[0]), "unx") == 0) ? DECOMPRESS : COMPRESS;
+	int mode = (argc > 0 && strcmp(basename(argv[0]), "decode") == 0) ? DECOMPRESS : COMPRESS;
 	FILE *istream = NULL, *ostream = NULL;
 	int force = 0;
 
