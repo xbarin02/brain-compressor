@@ -39,7 +39,6 @@ The algorithm
 
 The **Brain Compressor** uses an adaptive Golomb-Rice coding based on context modeling.
 The context model uses a single previous byte in the uncompressed stream to predict the next byte.
-The compressor can switch between fast compression mode (default) and multi-pass high compression mode.
 
 How to build?
 -------------
