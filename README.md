@@ -1,4 +1,4 @@
-x &ndash; minimalist data compressor
+Brain Compressor &ndash; minimalist data compressor
 ====================================
 
 [![Build Status](https://travis-ci.org/xbarin02/x-compressor.svg?branch=master)](https://travis-ci.org/xbarin02/x-compressor)
@@ -7,8 +7,8 @@ Why?
 ----
 
 Because readable and maintainable code is key.
-The **x** is an easily verifiable and portable lossless data compressor.
-Source codes count 700 lines in total.
+The **Brain Compressor** is an easily verifiable and portable lossless data compressor.
+Source codes count 635 lines in total.
 A core library is less than 400 lines in pure C.
 
 Benchmarks
@@ -29,7 +29,7 @@ Bold font indicates the best result.
 | ----------               | -----    | ----------------: | ------------------: | ----:   |
 | lz4 1.9.2                | 1.75     | **0.29**          | **0.11**            |  20 619 |
 | lzop 1.04                | 1.78     | 0.36              | 0.33                |  17 123 |
-| **x**                    | 1.88     | 1.03              | 0.91                | **700** |
+| **Brain Compressor**     | 1.88     | 1.03              | 0.91                | **635** |
 | gzip 1.9                 | 2.74     | 4.69              | 0.63                |  48 552 |
 | zstd 1.3.7               | 2.80     | 0.55              | 0.18                | 111 948 |
 | bzip2 1.0.6              | 3.45     | 7.39              | 3.36                |   8 117 |
@@ -39,7 +39,7 @@ Bold font indicates the best result.
 The algorithm
 -------------
 
-The **x** uses an adaptive Golomb-Rice coding based on context modeling.
+The **Brain Compressor** uses an adaptive Golomb-Rice coding based on context modeling.
 The context model uses a single previous byte in the uncompressed stream to predict the next byte.
 The compressor can switch between fast compression mode (default) and multi-pass high compression mode.
 
@@ -62,13 +62,13 @@ How to use?
 Compress:
 
 ```
-./x INPUT-FILE [OUTPUT-FILE]
+./encode INPUT-FILE [OUTPUT-FILE]
 ```
 
 Decompress:
 
 ```
-./unx INPUT-FILE [OUTPUT-FILE]
+./decode INPUT-FILE [OUTPUT-FILE]
 ```
 
 Authors
